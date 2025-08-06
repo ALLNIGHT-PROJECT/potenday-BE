@@ -1,5 +1,6 @@
 package com.allnight.potendayBE.config;
 
+import com.allnight.potendayBE.common.Constants;
 import com.allnight.potendayBE.exception.JsonAccessDeniedHandler;
 import com.allnight.potendayBE.exception.JsonAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
