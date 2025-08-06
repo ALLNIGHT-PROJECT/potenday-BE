@@ -1,4 +1,4 @@
-package com.allnight.potendayBE.config;
+package com.allnight.potendayBE.common;
 
 import java.util.List;
 
