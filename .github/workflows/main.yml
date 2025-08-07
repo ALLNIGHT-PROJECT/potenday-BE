@@ -40,6 +40,7 @@ jobs:
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.NCLOUD_HOST }}
+          port: 22
           username: ${{ secrets.NCLOUD_USER }}
           key: ${{ secrets.NCLOUD_SSH_KEY }}
           script: |
