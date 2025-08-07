@@ -36,13 +36,13 @@ jobs:
           push: true
           tags: rudalsss/potenday:latest
 
-      - name: Ncloud 서버 SSH 접속 후 Docker 배포
-        uses: appleboy/ssh-action@v1
+      - name: SSH-deploy
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.NCLOUD_HOST }}
-          port: 22
           username: ${{ secrets.NCLOUD_USER }}
-          key: ${{ secrets.NCLOUD_SSH_KEY }}
+          password: ${{ secrets.REMOTE_PASSWORD }}  # ✔️ 깔끔하게 명확하게
+          port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
             docker pull rudalsss/potenday:latest
             docker stop potenday-server || true
