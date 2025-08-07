@@ -11,7 +11,6 @@ public class Constants {
     public static List<String> PERMIT_ALL_URLS = List.of(
             "/v1/auth/naver/login",
             "/v1/auth/reissue/token",
-            "/api/auth/reissue",
             "/h2-console",
             "/h2-console/",
             "/h2-console/**",
