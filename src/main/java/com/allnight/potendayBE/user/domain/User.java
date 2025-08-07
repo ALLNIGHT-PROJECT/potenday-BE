@@ -1,6 +1,7 @@
 package com.allnight.potendayBE.user.domain;
 
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter @Setter
+@NoArgsConstructor
 @Table(name = "service_user")
 public class User {
     @Id
@@ -27,4 +29,15 @@ public class User {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @Builder
+    public User(LoginProvider provider, String providerId, String userName, String email,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.provider = provider;
+        this.providerId = providerId;
+        this.userName = userName;
+        this.email = email;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
 }
