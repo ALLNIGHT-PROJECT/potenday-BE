@@ -9,10 +9,8 @@ public class Constants {
 
     // 인증필요없는 URL 리스트
     public static List<String> PERMIT_ALL_URLS = List.of(
-            "/api/auth/signup",
-            "/api/auth/email-code/send",
-            "/api/auth/email-code/verify",
-            "/api/auth/login",
+            "/v1/auth/naver/login",
+            "/v1/auth/reissue/token",
             "/api/auth/reissue",
             "/h2-console",
             "/h2-console/",
