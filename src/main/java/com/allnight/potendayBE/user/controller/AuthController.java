@@ -11,6 +11,7 @@ import com.allnight.potendayBE.user.dto.NaverLoginResponse;
 import com.allnight.potendayBE.user.dto.ReissueRequest;
 import com.allnight.potendayBE.user.service.NaverOAuthService;
 import com.allnight.potendayBE.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -79,8 +80,14 @@ public class AuthController {
                 throw new CustomException(ErrorCode.REDIS_SAVE_FAIL);
             }
         }
-
         return ResponseEntity.ok(ApiResponse.success(new LoginResponse(newAccessToken, newRefreshToken)));
+    }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<?>> logout(HttpServletRequest request){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+        userService.logout(userId);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
