@@ -1,5 +1,7 @@
 package com.allnight.potendayBE.user.service;
 
+import com.allnight.potendayBE.exception.CustomException;
+import com.allnight.potendayBE.exception.ErrorCode;
 import com.allnight.potendayBE.security.jwt.JwtUtil;
 import com.allnight.potendayBE.user.domain.LoginProvider;
 import com.allnight.potendayBE.user.domain.User;
@@ -7,6 +9,7 @@ import com.allnight.potendayBE.user.dto.NaverLoginResponse;
 import com.allnight.potendayBE.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +30,7 @@ public class NaverOAuthService {
     private final JwtUtil jwtUtil;
     private final WebClient webClient;
     private final UserRepository userRepository;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${naver.client-id}")
     private String clientId;
@@ -68,6 +73,13 @@ public class NaverOAuthService {
         // List<String> roles = List.of("ROLE_USER");
         String jwtAccessToken = jwtUtil.createAccessToken(user.getId());
         String jwtRefreshToken = jwtUtil.createRefreshToken(user.getId());
+
+        try {
+            // Redis에 refreshToken 저장
+            redisTemplate.opsForValue().set("RT:" + user.getId(), jwtRefreshToken, Duration.ofDays(14));
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.REDIS_SAVE_FAIL);
+        }
 
         return new NaverLoginResponse(jwtAccessToken, jwtRefreshToken,
                 user.getId(), user.getEmail());
