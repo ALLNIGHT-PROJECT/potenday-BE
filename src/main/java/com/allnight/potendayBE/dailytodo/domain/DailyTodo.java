@@ -27,7 +27,7 @@ public class DailyTodo {
 
     private LocalDate targetDate;
 
-    private boolean isCompleted;
+    private boolean isCompleted = false;
 
     private int orderIdx;
 
@@ -38,7 +38,7 @@ public class DailyTodo {
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "user_id")
     private User user;
     private LocalDateTime dueDate;
-    private TaskPriority priority;
+    @Enumerated(EnumType.STRING) private TaskPriority priority;
     private String description;
     private String reference;
     @OneToMany(mappedBy = "dailyTodo", cascade = CascadeType.ALL, orphanRemoval = true)

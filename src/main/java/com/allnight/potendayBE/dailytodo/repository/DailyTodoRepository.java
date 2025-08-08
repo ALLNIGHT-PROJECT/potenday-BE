@@ -28,10 +28,7 @@ public class DailyTodoRepository {
 
     public int findMaxOrderIdxByPriority(TaskPriority priority, LocalDate targetDate) {
         Integer maxOrder = em.createQuery("""
-            SELECT MAX(d.orderIdx)
-            FROM DailyTodo d
-            WHERE d.priority = :priority
-              AND d.targetDate = :targetDate
+            SELECT MAX(d.orderIdx) FROM DailyTodo d WHERE d.priority = :priority AND d.targetDate = :targetDate
             """, Integer.class)
                 .setParameter("priority", priority)
                 .setParameter("targetDate", targetDate)
@@ -41,11 +38,8 @@ public class DailyTodoRepository {
     }
 
     public List<DailyTodo> findByUserToday(User user, LocalDate targetDate) {
-        return em.createQuery("select t from DailyTodo t where t.user = :user and t.targetDate = :targetDate" +
-                                " order by t.orderIdx asc",
-                        DailyTodo.class)
+        return em.createQuery("SELECT d FROM DailyTodo d WHERE d.user = :user", DailyTodo.class)
                 .setParameter("user", user)
-                .setParameter("targetDate", targetDate)
                 .getResultList();
     }
 }

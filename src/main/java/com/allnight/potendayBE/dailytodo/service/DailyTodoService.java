@@ -70,7 +70,10 @@ public class DailyTodoService {
     // 우선순위에 따라 정렬
     public List<DailyTodo> sortByPriorityAndOrderIdx(List<DailyTodo> todos) {
         return todos.stream()
-                .sorted(Comparator.comparingInt(DailyTodo::getOrderIdx))
+                .sorted(
+                        Comparator.comparing((DailyTodo t) -> t.getPriority().getOrder()) // 우선순위 오름차순 (1,2,3)
+                                .thenComparing(DailyTodo::getOrderIdx)                   // orderIdx 오름차순
+                )
                 .toList();
     }
 }
