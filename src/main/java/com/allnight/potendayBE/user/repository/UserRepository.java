@@ -32,6 +32,7 @@ public class UserRepository {
                 .findFirst();
     }
 
+    public Optional<User> findOne(Long id){ return Optional.ofNullable(em.find(User.class, id)); }
 
 
 

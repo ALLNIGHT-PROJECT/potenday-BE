@@ -3,11 +3,13 @@ package com.allnight.potendayBE.task.domain;
 import com.allnight.potendayBE.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +28,7 @@ public class Task {
 
     private LocalDateTime dueDate;
 
-    private int priority;
-
-    private TaskStatus status;
+    private TaskPriority priority;
 
     private String description;
 

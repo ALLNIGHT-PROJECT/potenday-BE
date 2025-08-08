@@ -3,11 +3,13 @@ package com.allnight.potendayBE.task.domain;
 import com.allnight.potendayBE.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 public class TaskSource {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,13 +20,7 @@ public class TaskSource {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    private TaskType taskType;
-
-
     private String rawContent;
-
-    private String rawUrl;
 
     private LocalDateTime createdAt;
 }
