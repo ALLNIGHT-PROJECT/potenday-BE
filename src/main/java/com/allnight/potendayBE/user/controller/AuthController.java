@@ -49,7 +49,7 @@ public class AuthController {
         Long userId = jwtUtil.extractUserId(refreshToken, true); // 유저Id 추출
 
         // 저장된 refreshToken 검증
-        String savedRefreshToken = redisTemplate.opsForValue().get("refreshToken:" + userId);
+        String savedRefreshToken = redisTemplate.opsForValue().get("RT:" + userId);
         if( savedRefreshToken==null ){ // 만료되어 삭제된 refreshtoken, 로그아웃한 유저
             log.error("[REISSUE] userId={} - 저장된 refreshToken 없음 - 만료된경우, 로그아웃한 경우", userId);
             throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRED); // 클라이언트에 다시 로그인 요청
