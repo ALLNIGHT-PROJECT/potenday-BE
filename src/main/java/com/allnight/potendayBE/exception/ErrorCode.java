@@ -24,6 +24,8 @@ public enum ErrorCode {
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
     TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 테스크(업무)를 찾을 수 없습니다."),
+    TODO_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 데일리 테스크(TODO)를 찾을 수 없습니다."),
+    INVALID_ORDER_INDEX(HttpStatus.BAD_REQUEST, "올바르지 않은 인덱스 지정요청입니다."),
 
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버내부 문제가 발생했습니다." );
 
