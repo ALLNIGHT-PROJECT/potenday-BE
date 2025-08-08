@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -37,5 +38,9 @@ public class TaskRepository {
                 em.clear();
             }
         }
+    }
+
+    public Optional<Task> findOne(Long id){
+        return Optional.ofNullable(em.find(Task.class, id));
     }
 }

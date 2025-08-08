@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/task")
-public class TaskController {
+public class TaskAgentController {
     private final TaskExtractService taskExtractService;
     private final TaskSrcService taskSrcService;
     private final JwtUtil jwtUtil;

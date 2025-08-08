@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,7 +35,18 @@ public class Task {
 
     private String reference;
 
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SubTask> subTasks;
+
+    private int totalEstimatedTime;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private void recalculateTotalEstimatedTime() {
+        this.totalEstimatedTime = subTasks.stream()
+                .mapToInt(SubTask::getEstimatedTime) // SubTask의 estimatedTime 필드 합산
+                .sum();
+    }
 }
