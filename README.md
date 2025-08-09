@@ -71,8 +71,10 @@ python init_db.py
 
 6. 서버 실행:
 
-개발 모드:
+개발 모드 (HTTP):
 ```bash
+./start_dev.sh
+# 또는
 uvicorn app.main:app --reload --port 8000
 ```
 
