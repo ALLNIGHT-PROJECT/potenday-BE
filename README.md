@@ -1,123 +1,120 @@
-# Potenday Backend - FastAPI
+# Potenday Backend API
 
-A modern, fast (high-performance) web API built with FastAPI and PostgreSQL.
+AI 기반 업무 관리 서비스 백엔드 API
 
-## 🚀 Features
+## 🚀 기술 스택
 
-- **FastAPI** - Modern Python web framework for building APIs
-- **SQLAlchemy** - Async ORM for database operations
-- **PostgreSQL** - Production-ready database
-- **JWT Authentication** - Secure token-based authentication
-- **Docker Support** - Easy deployment with containers
-- **Type Hints** - Full type safety with Pydantic
-- **Async/Await** - High-performance async operations
+- **Framework**: FastAPI (Python 3.12)
+- **Database**: SQLite (개발) / PostgreSQL (프로덕션)
+- **AI**: NAVER HyperCLOVA X
+  - HCX-007: 추론 모델 (업무 추출)
+  - HCX-005: 빠른 모델 (JSON 검증)
+- **Authentication**: JWT Token
+- **Type Safety**: Pydantic
+- **ORM**: SQLAlchemy (Async)
 
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
 potenday-BE/
 ├── app/
-│   ├── api/           # API endpoints
-│   ├── core/          # Core configurations
-│   ├── db/            # Database connections
-│   ├── models/        # SQLAlchemy models
-│   ├── schemas/       # Pydantic schemas
-│   ├── services/      # Business logic
-│   ├── utils/         # Utility functions
-│   └── main.py        # Application entry point
-├── tests/             # Test files
-├── requirements.txt   # Python dependencies
-├── Dockerfile         # Docker configuration
-├── docker-compose.yml # Docker Compose configuration
-└── .env.example       # Environment variables example
+│   ├── api/           # API 엔드포인트
+│   ├── core/          # 핵심 기능 (보안, 설정)
+│   │   └── ai/        # AI 멀티에이전트 시스템
+│   ├── db/            # 데이터베이스 설정
+│   ├── models/        # SQLAlchemy 모델
+│   ├── schemas/       # Pydantic 스키마
+│   ├── services/      # 비즈니스 로직
+│   └── main.py        # 애플리케이션 진입점
+├── ssl/               # SSL 인증서 (HTTPS)
+├── requirements.txt   # Python 의존성
+├── init_db.py        # DB 초기화 스크립트
+└── .env.example      # 환경 변수 예시
 ```
 
-## 🛠️ Installation
+## 🛠️ 설치 및 실행
 
-### Prerequisites
+### 사전 요구사항
 
 - Python 3.12+
-- PostgreSQL
-- pip or uv package manager
+- SQLite (개발) / PostgreSQL (프로덕션)
 
-### Setup
+### 설치
 
-1. Clone the repository:
+1. 저장소 클론:
 ```bash
-git clone <repository-url>
+git clone https://github.com/ALLNIGHT-PROJECT/potenday-BE.git
 cd potenday-BE
 ```
 
-2. Create virtual environment:
+2. 가상 환경 생성:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+3. 의존성 설치:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
+4. 환경 변수 설정:
 ```bash
 cp .env.example .env
-# Edit .env with your configuration
+# .env 파일 수정
 ```
 
-5. Run the application:
+5. 데이터베이스 초기화:
 ```bash
-uvicorn app.main:app --reload
+python init_db.py
 ```
 
-The API will be available at `http://localhost:8000`
+6. 서버 실행:
 
-## 🐳 Docker
-
-Run with Docker Compose:
+개발 모드:
 ```bash
-docker-compose up --build
+uvicorn app.main:app --reload --port 8000
 ```
 
-## 📚 API Documentation
+프로덕션 모드 (HTTPS):
+```bash
+./start_production.sh
+```
 
-Once the application is running, you can access:
+## 📚 API 문서
+
+서버 실행 후 접속:
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
-## 🔧 API Endpoints
+## 🔧 주요 API 엔드포인트
 
-### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login user
-- `POST /api/v1/auth/refresh` - Refresh access token
+### 업무 관리 (Tasks)
+- `POST /v1/task/extract` - AI 업무 추출
+- `POST /v1/task/manual` - 수동 업무 생성
+- `GET /v1/task/` - 업무 목록 조회
+- `DELETE /v1/task/reset` - 업무 초기화
 
-### Users
-- `GET /api/v1/users/me` - Get current user
-- `PUT /api/v1/users/me` - Update current user
-- `DELETE /api/v1/users/me` - Delete current user
+### 사용자 관리 (User)
+- `GET /v1/user/profile` - 프로필 조회
+- `PUT /v1/user/profile` - 프로필 수정
 
-### Tasks
-- `GET /api/v1/tasks` - Get all tasks
-- `POST /api/v1/tasks` - Create new task
-- `GET /api/v1/tasks/{id}` - Get specific task
-- `PUT /api/v1/tasks/{id}` - Update task
-- `DELETE /api/v1/tasks/{id}` - Delete task
+## 🤖 멀티에이전트 시스템
 
-### Daily Todos
-- `GET /api/v1/todos` - Get todos
-- `POST /api/v1/todos` - Create new todo
-- `PUT /api/v1/todos/{id}` - Update todo
-- `DELETE /api/v1/todos/{id}` - Delete todo
-- `POST /api/v1/todos/reorder` - Reorder todos
+### TaskExtractor
+- HCX-007 모델 사용
+- 텍스트에서 업무 자동 추출
+- 사용자 프로필 기반 개인화
 
-## 🧪 Testing
+### JsonValidatorAgent  
+- HCX-005 모델 사용
+- JSON 응답 검증 및 수정
+- 구조화된 데이터 보장
 
-Run tests with pytest:
-```bash
-pytest
-```
+### UserAnalyzer
+- 사용자 행동 분석
+- 프로필 기반 업무 추천
 
 ## 📝 License
 
-MIT License
+Private - All Rights Reserved

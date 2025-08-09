@@ -1,11 +1,93 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+potenday.db
+
+# Environment variables
+.env
+*.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+test_*.py
+*_test.py
+run_tests.py
+clear_*.py
+update_*.py
+
+# Documentation (temporary/test)
+TEST_*.md
+MULTIAGENT_*.md
+README_*.md
+
+# SSL certificates (keep only necessary)
+ssl/*.key
+ssl/*.csr
+ssl/private.key
+ssl/certificate.crt
+ssl/openssl.cnf
+
+# Logs
+*.log
+logs/
+
+# Cache
+.serena/
+*.pkl
+
+# Shell scripts (temporary)
+setup_*.sh
+generate_*.sh
+
+# Old Java project files (to be removed)
 HELP.md
 .gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### STS ###
+gradle/
+gradlew
+gradlew.bat
+build.gradle
+settings.gradle
+src/main/java/
+src/test/
+*.iws
+*.iml
+*.ipr
+out/
+bin/
 .apt_generated
 .classpath
 .factorypath
@@ -13,30 +95,11 @@ build/
 .settings
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
-.vscode/
-
-*.log
-*.env
-application-dev.yml
-application-local.yml
+# Deprecated AI service
+ai-service/
