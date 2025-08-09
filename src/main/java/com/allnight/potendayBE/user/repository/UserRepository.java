@@ -34,6 +34,11 @@ public class UserRepository {
 
     public Optional<User> findOne(Long id){ return Optional.ofNullable(em.find(User.class, id)); }
 
+    public boolean existsByEmail(String email){
+        return em.createQuery("select count(u) from User u where u.email = :email", Long.class)
+                .setParameter("email", email)
+                .getSingleResult() > 0;
+    };
 
 
 }

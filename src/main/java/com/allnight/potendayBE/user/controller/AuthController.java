@@ -5,10 +5,7 @@ import com.allnight.potendayBE.exception.CustomException;
 import com.allnight.potendayBE.exception.ErrorCode;
 import com.allnight.potendayBE.security.jwt.JwtUtil;
 import com.allnight.potendayBE.user.domain.User;
-import com.allnight.potendayBE.user.dto.LoginResponse;
-import com.allnight.potendayBE.user.dto.NaverLoginRequest;
-import com.allnight.potendayBE.user.dto.NaverLoginResponse;
-import com.allnight.potendayBE.user.dto.ReissueRequest;
+import com.allnight.potendayBE.user.dto.*;
 import com.allnight.potendayBE.user.service.NaverOAuthService;
 import com.allnight.potendayBE.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/auth")
@@ -35,6 +34,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final StringRedisTemplate redisTemplate;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/naver/login")
     public ResponseEntity<ApiResponse<?>> loginWithNaver(@RequestBody NaverLoginRequest request){
@@ -73,7 +73,7 @@ public class AuthController {
             newRefreshToken = jwtUtil.createRefreshToken(userId);
             log.info("[REISSUE] userId={} - refreshToken 재발급 (만료 {}일 남음)", userId, daysLeft);
             try{
-                redisTemplate.opsForValue().set("refreshToken:" + userId, newRefreshToken,
+                redisTemplate.opsForValue().set("RT:" + userId, newRefreshToken,
                         Duration.ofSeconds(jwtUtil.getRefreshTokenValidityInSeconds()));
             } catch (Exception e){
                 log.error("[REISSUE] userId={} - Redis 저장 실패", userId, e);
@@ -90,4 +90,44 @@ public class AuthController {
         userService.logout(userId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    // 로컬 회원가입
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<?>> register(@RequestBody EmailRegisterRequest req) {
+        if (userService.existsByEmail(req.getEmail())) {
+            throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
+        }
+        userService.createLocalUser(req.getEmail(), req.getPassword());
+        return ResponseEntity.ok(ApiResponse.success(Map.of("message","OK")));
+    }
+
+    // 로컬 로그인
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody EmailLoginRequest req) {
+        User user = userService.findByEmail(req.getEmail())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getPassword() == null || !passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        Long userId = user.getId();
+        String accessToken = jwtUtil.createAccessToken(userId);
+        String refreshToken = jwtUtil.createRefreshToken(userId);
+
+        try {
+            // ★ 재발급 로직과 키 프리픽스 통일: "RT:"
+            redisTemplate.opsForValue().set(
+                    "RT:" + userId,
+                    refreshToken,
+                    Duration.ofSeconds(jwtUtil.getRefreshTokenValidityInSeconds())
+            );
+        } catch (Exception e) {
+            log.error("[LOGIN] userId={} - Redis RT 저장 실패", userId, e);
+            throw new CustomException(ErrorCode.REDIS_SAVE_FAIL);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(new LoginResponse(accessToken, refreshToken)));
+    }
+
 }

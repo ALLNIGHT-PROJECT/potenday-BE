@@ -27,6 +27,9 @@ public class User {
 
     private String email;
 
+    @Column(nullable = true) // 기존 OAuth 계정 호환
+    private String password;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

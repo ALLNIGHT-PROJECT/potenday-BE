@@ -7,9 +7,13 @@ import com.allnight.potendayBE.user.domain.UserProfile;
 import com.allnight.potendayBE.user.dto.UserProfileDto;
 import com.allnight.potendayBE.user.repository.UserRepository;
 import com.allnight.potendayBE.user.repository.userProfileRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final userProfileRepository userProfileRepository;
     private final RedisTemplate redisTemplate;
+    private final PasswordEncoder passwordEncoder;
 
     public User findByUserId(Long userId){
         return userRepository.findOne(userId)
@@ -43,4 +48,22 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_PROFILE_NOT_FOUND));
     }
 
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Transactional
+    public User createLocalUser(String email, String rawPassword) {
+        if (userRepository.existsByEmail(email)) {
+            throw new CustomException(ErrorCode.DUPLICATED_EMAIL);
+        }
+        User u = new User();
+        u.setEmail(email);
+        u.setPassword(passwordEncoder.encode(rawPassword)); // ★ BCrypt
+        return userRepository.save(u);
+    }
 }

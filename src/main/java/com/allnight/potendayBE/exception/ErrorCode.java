@@ -28,6 +28,9 @@ public enum ErrorCode {
     USER_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 유저정보(profile)를 찾을 수 없습니다."),
     INVALID_ORDER_INDEX(HttpStatus.BAD_REQUEST, "올바르지 않은 인덱스 지정요청입니다."),
 
+    DUPLICATED_EMAIL(HttpStatus.BAD_REQUEST, "이미 가입한 유저입니다."),
+    INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, "잘못된 인증값입니다."),
+
 
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버내부 문제가 발생했습니다." );
 
