@@ -1,20 +1,25 @@
 package com.allnight.potendayBE.dailytodo.dto;
 
 import com.allnight.potendayBE.task.domain.Task;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
 public class DailyTodoDetail {
-    private Long id;
-    private Long taskId;
+    private Long todoId;
     private String title;
     private String priority;
-    private int totalEstimatedTime;
     private LocalDateTime dueDate;
-    private boolean isCompleted;
+    private int totalEstimatedTime;
+    @JsonProperty("isCompleted")
+    private boolean completed;
     private int orderIdx;
+    private double progressRate;
+
+    private List<SubTaskDetail> subTasks;
 }

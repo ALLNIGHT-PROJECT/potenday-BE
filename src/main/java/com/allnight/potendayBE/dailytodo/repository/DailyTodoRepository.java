@@ -38,20 +38,37 @@ public class DailyTodoRepository {
         em.flush();
     }
 
-    public int findMaxOrderIdxByPriority(TaskPriority priority, LocalDate targetDate) {
+    public int findMaxOrderIdxByPriority(User user, TaskPriority priority, LocalDate targetDate) {
         Integer maxOrder = em.createQuery("""
             SELECT MAX(d.orderIdx) FROM DailyTodo d WHERE d.priority = :priority AND d.targetDate = :targetDate
+            AND d.user = :user
             """, Integer.class)
                 .setParameter("priority", priority)
                 .setParameter("targetDate", targetDate)
+                .setParameter("user", user)
                 .getSingleResult();
 
         return maxOrder != null ? maxOrder : 0;
     }
 
-    public List<DailyTodo> findByUserToday(User user, LocalDate targetDate) {
-        return em.createQuery("SELECT d FROM DailyTodo d WHERE d.user = :user", DailyTodo.class)
+    public List<DailyTodo> findByUserTodoWithSubTasks(User user, LocalDate targetDate) {
+        return em.createQuery("""
+                SELECT DISTINCT d
+                FROM DailyTodo d
+                LEFT JOIN FETCH d.subTasks s
+                WHERE d.user = :user
+                  AND d.targetDate = :date
+                ORDER BY
+                   CASE d.priority
+                     WHEN 'HIGH' THEN 1
+                     WHEN 'MID'  THEN 2
+                     WHEN 'LOW'  THEN 3
+                   END,
+                   d.orderIdx ASC,
+                   s.id ASC
+            """, DailyTodo.class)
                 .setParameter("user", user)
+                .setParameter("date", targetDate)
                 .getResultList();
     }
 
@@ -62,6 +79,20 @@ public class DailyTodoRepository {
     public List<DailyTodo> findByPriorityOrderByIdx(TaskPriority priority) {
         return em.createQuery("SELECT d FROM DailyTodo d WHERE d.priority = :priority ORDER BY d.orderIdx ASC", DailyTodo.class)
                 .setParameter("priority", priority)
+                .getResultList();
+    }
+
+    public List<DailyTodo> findByPriorityOrderByIdx(User user, TaskPriority priority, LocalDate targetDate) {
+        return em.createQuery("""
+            SELECT d FROM DailyTodo d
+            WHERE d.priority = :priority
+              AND d.user = :user
+              AND d.targetDate = :targetDate
+            ORDER BY d.orderIdx ASC
+        """, DailyTodo.class)
+                .setParameter("priority", priority)
+                .setParameter("user", user)
+                .setParameter("targetDate", targetDate)
                 .getResultList();
     }
 }

@@ -27,11 +27,14 @@ public class DailyTodo {
 
     private LocalDate targetDate;
 
-    private boolean isCompleted = false;
-
     private int orderIdx;
 
-    private double progressRate; // 0.0 ~ 100.0 (%)
+    @OneToMany(mappedBy = "dailyTodo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DailySubTask> subTasks;
+
+    // private boolean isCompleted = false;
+    // private double progressRate; // 0.0 ~ 100.0 (%)
+    // private int totalEstimatedTime;
 
     // task 관련 영역
     private String title;
@@ -41,17 +44,4 @@ public class DailyTodo {
     @Enumerated(EnumType.STRING) private TaskPriority priority;
     private String description;
     private String reference;
-    @OneToMany(mappedBy = "dailyTodo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SubTask> subTasks;
-    private int totalEstimatedTime;
-
-    // 달성률 변경
-    public void updateProgressRate() {
-        if (subTasks == null || subTasks.isEmpty()) {
-            this.progressRate = 0.0;
-            return;
-        }
-        long completedCount = subTasks.stream().filter(SubTask::isCompleted).count();
-        this.progressRate = (completedCount * 100.0) / subTasks.size();
-    }
 }

@@ -1,8 +1,10 @@
 package com.allnight.potendayBE.dailytodo.service;
 
+import com.allnight.potendayBE.dailytodo.domain.DailySubTask;
 import com.allnight.potendayBE.dailytodo.domain.DailyTodo;
 import com.allnight.potendayBE.dailytodo.dto.DailyTodoDetail;
 import com.allnight.potendayBE.dailytodo.dto.DailyTodoReorderRequest;
+import com.allnight.potendayBE.dailytodo.dto.SubTaskDetail;
 import com.allnight.potendayBE.dailytodo.repository.DailyTodoRepository;
 import com.allnight.potendayBE.exception.CustomException;
 import com.allnight.potendayBE.exception.ErrorCode;
@@ -15,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -33,25 +33,46 @@ public class DailyTodoService {
 
     public List<DailyTodoDetail> getUsersTodo(Long userId, LocalDate targetDate){
         User user = userService.findByUserId(userId);
-        List<DailyTodo> userTodoList = dailyTodoRepository.findByUserToday(user, targetDate);
-        return sortByPriorityAndOrderIdx(userTodoList)
-                .stream()
-                .map(todo -> {
-                    DailyTodoDetail detail = new DailyTodoDetail();
-                    detail.setId(todo.getId());
-                    detail.setTaskId(todo.getTask().getId());
-                    detail.setTitle(todo.getTask().getTitle());
-                    detail.setPriority(todo.getTask().getPriority().name()); // enum -> 문자열
-                    detail.setTotalEstimatedTime(todo.getTask().getTotalEstimatedTime());
-                    detail.setDueDate(todo.getTask().getDueDate());
-                    detail.setCompleted(todo.isCompleted());
-                    detail.setOrderIdx(todo.getOrderIdx());
-                    return detail;
-                }).toList();
+        List<DailyTodo> userTodoList = dailyTodoRepository.findByUserTodoWithSubTasks(user, targetDate);
+        return userTodoList.stream()
+                .map(this::toDetail)
+                .toList();
+    }
+
+    private DailyTodoDetail toDetail(DailyTodo d) {
+        // 서브태스크 DTO 변환
+        List<SubTaskDetail> subs = (d.getSubTasks() == null ? List.<SubTaskDetail>of() :
+                d.getSubTasks().stream().map(st -> {
+                    SubTaskDetail s = new SubTaskDetail();
+                    s.setSubTaskId(st.getId());
+                    s.setTitle(st.getTitle());
+                    s.setEstimatedMin(st.getEstimatedTime());   // 필드명 맞춤
+                    s.setChecked(st.isCompleted());
+                    return s;
+                }).toList()
+        );
+
+        // 합계/완료/진척 계산
+        int totalMin = subs.stream().mapToInt(SubTaskDetail::getEstimatedMin).sum();
+        boolean allChecked = !subs.isEmpty() && subs.stream().allMatch(SubTaskDetail::isChecked);
+        double progress = subs.isEmpty() ? 0.0 :
+                (subs.stream().filter(SubTaskDetail::isChecked).count() * 100.0) / subs.size();
+
+        DailyTodoDetail out = new DailyTodoDetail();
+        out.setTodoId(d.getId());
+        out.setTitle(d.getTitle());
+        out.setPriority(d.getPriority().name());
+        out.setTotalEstimatedTime(totalMin);           // 합계갱신
+        out.setDueDate(d.getDueDate());
+        out.setCompleted(allChecked);                  // 모든 서브체크 완료 시 true
+        out.setOrderIdx(d.getOrderIdx());
+        out.setProgressRate(progress);                 // 달성률 갱신
+        out.setSubTasks(subs);
+        return out;
     }
 
     @Transactional
-    public DailyTodo registerDailyTodo(Task task, LocalDate targetDate) {
+    public DailyTodo registerDailyTodo(Task task, LocalDate targetDate, User user) {
         DailyTodo dailyTodo = new DailyTodo();
         dailyTodo.setTask(task);
         dailyTodo.setTargetDate(targetDate);
@@ -63,32 +84,39 @@ public class DailyTodoService {
         dailyTodo.setPriority(task.getPriority());
         dailyTodo.setDescription(task.getDescription());
         dailyTodo.setReference(task.getReference());
-        dailyTodo.setTotalEstimatedTime(task.getTotalEstimatedTime());
 
         // 해당 Priority 그룹 내 최대 orderIdx + 1
-        int nextOrder = dailyTodoRepository.findMaxOrderIdxByPriority(task.getPriority(), targetDate) + 1;
+        int nextOrder = dailyTodoRepository.findMaxOrderIdxByPriority(user, task.getPriority(), targetDate) + 1;
         dailyTodo.setOrderIdx(nextOrder);
 
         // SubTask 매핑
         if (task.getSubTasks() != null) {
-            task.getSubTasks().forEach(sub -> sub.setDailyTodo(dailyTodo));
+            List<DailySubTask> clones = task.getSubTasks().stream()
+                    .map(sub -> DailySubTask.builder()
+                            .dailyTodo(dailyTodo)
+                            .title(sub.getTitle())
+                            .estimatedTime(sub.getEstimatedTime())
+                            .isCompleted(false)
+                            .build()
+                    ).toList();
+            dailyTodo.setSubTasks(clones);
         }
 
         return dailyTodoRepository.save(dailyTodo);
     }
 
-    // 우선순위에 따라 정렬
-    public List<DailyTodo> sortByPriorityAndOrderIdx(List<DailyTodo> todos) {
-        return todos.stream()
-                .sorted(
-                        Comparator.comparing((DailyTodo t) -> t.getPriority().getOrder()) // 우선순위 오름차순 (1,2,3)
-                                .thenComparing(DailyTodo::getOrderIdx)                   // orderIdx 오름차순
-                )
-                .toList();
-    }
+//    // 우선순위에 따라 정렬
+//    public List<DailyTodo> sortByPriorityAndOrderIdx(List<DailyTodo> todos) {
+//        return todos.stream()
+//                .sorted(
+//                        Comparator.comparing((DailyTodo t) -> t.getPriority().getOrder()) // 우선순위 오름차순 (1,2,3)
+//                                .thenComparing(DailyTodo::getOrderIdx)                   // orderIdx 오름차순
+//                )
+//                .toList();
+//    }
 
     @Transactional
-    public void reorderTodoList(DailyTodoReorderRequest request) {
+    public void reorderTodoList(DailyTodoReorderRequest request, LocalDate targetDate, User user) {
         DailyTodo targetTodo = findById(request.getTodoId());
         int oldOrderIdx = targetTodo.getOrderIdx();
         int newOrderIdx = request.getNewOrderIdx();
@@ -96,7 +124,7 @@ public class DailyTodoService {
         if (oldOrderIdx == newOrderIdx) return;
 
         // 같은 우선순위 그룹의 다른 항목들 조회
-        List<DailyTodo> samePriorityTodos = dailyTodoRepository.findByPriorityOrderByIdx( targetTodo.getPriority());
+        List<DailyTodo> samePriorityTodos = dailyTodoRepository.findByPriorityOrderByIdx( user, targetTodo.getPriority(), targetDate);
 
         // 유효한 orderIdx 범위 계산
         int minOrderIdx = samePriorityTodos.stream()
@@ -126,6 +154,11 @@ public class DailyTodoService {
         }
 
         targetTodo.setOrderIdx(newOrderIdx);
+
+        // 대상 투두도 함께 저장되도록 추가
+        if (!samePriorityTodos.contains(targetTodo)) {
+            samePriorityTodos.add(targetTodo);
+        }
         dailyTodoRepository.saveAll(samePriorityTodos);
     }
 }

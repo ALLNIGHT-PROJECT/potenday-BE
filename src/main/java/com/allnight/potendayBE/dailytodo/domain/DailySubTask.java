@@ -1,24 +1,27 @@
-package com.allnight.potendayBE.task.domain;
+package com.allnight.potendayBE.dailytodo.domain;
 
-import com.allnight.potendayBE.dailytodo.domain.DailyTodo;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
-public class SubTask {
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class DailySubTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "sub_task_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id", nullable = false)
-    private Task task;
+    @JoinColumn(name = "daily_todo_id", nullable = false)
+    private DailyTodo dailyTodo;
 
     private String title;
+
+    private boolean isCompleted;
 
     private int estimatedTime;
 }

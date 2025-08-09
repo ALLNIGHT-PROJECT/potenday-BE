@@ -8,6 +8,8 @@ import com.allnight.potendayBE.dailytodo.service.DailyTodoService;
 import com.allnight.potendayBE.security.jwt.JwtUtil;
 import com.allnight.potendayBE.task.domain.Task;
 import com.allnight.potendayBE.task.service.TaskService;
+import com.allnight.potendayBE.user.domain.User;
+import com.allnight.potendayBE.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ public class TodoController {
     private final DailyTodoService dailyTodoService;
     private final TaskService taskService;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getTodoList( HttpServletRequest request ){
@@ -37,16 +40,24 @@ public class TodoController {
     }
 
     @PostMapping("/{taskId}")
-    public ResponseEntity<ApiResponse<?>> postTodo( @PathVariable("taskId") Long taskId ){
+    public ResponseEntity<ApiResponse<?>> postTodo( HttpServletRequest request, @PathVariable("taskId") Long taskId ){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+        User user = userService.findByUserId(userId);
+
         Task task = taskService.findById(taskId);
-        DailyTodo todo = dailyTodoService.registerDailyTodo(task, LocalDate.now());
+        DailyTodo todo = dailyTodoService.registerDailyTodo(task, LocalDate.now(), user);
         log.info("TASK -> TODO등록 완료({})", todo.getId());
         return ResponseEntity.ok(ApiResponse.success("TASK -> TODO등록 완료"));
     }
 
     @PatchMapping("/reorder")
-    public ResponseEntity<ApiResponse<?>> reorderTodo( @RequestBody DailyTodoReorderRequest reorderRequest ){
-        dailyTodoService.reorderTodoList(reorderRequest);
+    public ResponseEntity<ApiResponse<?>> reorderTodo( HttpServletRequest request, @RequestBody DailyTodoReorderRequest reorderRequest ){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+        User user = userService.findByUserId(userId);
+
+        dailyTodoService.reorderTodoList(reorderRequest, LocalDate.now(), user);
         return ResponseEntity.ok(ApiResponse.success("순서변경완료"));
     }
 }

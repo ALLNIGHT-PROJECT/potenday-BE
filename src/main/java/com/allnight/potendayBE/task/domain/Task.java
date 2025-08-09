@@ -41,15 +41,7 @@ public class Task {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubTask> subTasks;
 
-    private int totalEstimatedTime;
-
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-
-    private void recalculateTotalEstimatedTime() {
-        this.totalEstimatedTime = subTasks.stream()
-                .mapToInt(SubTask::getEstimatedTime) // SubTask의 estimatedTime 필드 합산
-                .sum();
-    }
 }
