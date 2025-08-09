@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Task Manager - 현재 구현된 기능 기반 User Journey</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--gradient);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #991b1b;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stage-container {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .stage-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 1.5rem;
+        }
+
+        .stage-title h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stage-description {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-button:hover {
+            color: var(--primary);
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section h3 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h3::before {
+            content: '▶';
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+
+        .code-block {
+            background: #1f2937;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .code-header {
+            background: #374151;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .tech-stack {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .tech-badge {
+            background: var(--info);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .status-table th, .status-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status-table th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-badge.implemented {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.partial {
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .status-badge.not-implemented {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .api-endpoint {
+            background: #f0f9ff;
+            border-left: 4px solid var(--info);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .api-method.get { background: #d1fae5; color: #065f46; }
+        .api-method.post { background: #dbeafe; color: #1e40af; }
+        .api-method.put { background: #fed7aa; color: #92400e; }
+        .api-method.delete { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 AI Task Manager - 현재 구현 상태</h1>
+            <p>실제 구현된 기능 기반의 User Journey</p>
+            <div class="warning-box">
+                <strong>⚠️ 주의: MVP 상태</strong>
+                <p>현재 시스템은 핵심 AI 작업 관리 기능만 구현된 MVP(Minimum Viable Product) 상태입니다.</p>
+                <p>OAuth 인증, Redis 캐싱, WebSocket 통신, 프론트엔드 등은 아직 구현되지 않았습니다.</p>
+            </div>
+        </div>
+
+        <!-- Stage 1: API 직접 호출을 통한 작업 추출 -->
+        <div class="stage-container">
+            <div class="stage-header">
+                <div class="stage-number">1</div>
+                <div class="stage-title">
+                    <h2>텍스트 기반 작업 추출</h2>
+                    <p class="stage-description">API를 직접 호출하여 텍스트에서 작업 추출 (인증 없음)</p>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab(event, 'stage1-flow')">전체 플로우</button>
+                <button class="tab-button" onclick="showTab(event, 'stage1-api')">API 상세</button>
+                <button class="tab-button" onclick="showTab(event, 'stage1-backend')">백엔드 처리</button>
+                <button class="tab-button" onclick="showTab(event, 'stage1-ai')">AI 에이전트</button>
+                <button class="tab-button" onclick="showTab(event, 'stage1-db')">데이터베이스</button>
+            </div>
+
+            <div id="stage1-flow" class="tab-content active">
+                <div class="section">
+                    <h3>작업 추출 플로우</h3>
+                    <div class="mermaid">
+                        sequenceDiagram
+                        participant Client as API Client<br/>(Postman/curl)
+                        participant API as FastAPI<br/>Backend
+                        participant Agent as MultiAgent<br/>Processor
+                        participant AI as LLM<br/>(OpenRouter)
+                        participant DB as PostgreSQL
+                        
+                        Client->>API: POST /api/extract<br/>{text: "내일 회의 준비..."}
+                        API->>Agent: process_workflow(text, type)
+                        
+                        Note over Agent: 멀티에이전트 워크플로우
+                        Agent->>AI: extract_agent()<br/>작업 추출
+                        AI-->>Agent: 추출된 작업 목록
+                        
+                        Agent->>AI: analyze_agent()<br/>복잡도 분석
+                        AI-->>Agent: 분석 결과
+                        
+                        Agent->>AI: prioritize_agent()<br/>우선순위 설정
+                        AI-->>Agent: 우선순위 정렬
+                        
+                        Agent->>AI: decompose_agent()<br/>서브태스크 분해
+                        AI-->>Agent: 서브태스크 목록
+                        
+                        Agent-->>API: 처리 결과
+                        
+                        API->>DB: INSERT INTO tasks
+                        DB-->>API: 작업 저장 완료
+                        
+                        API-->>Client: HTTP 200<br/>추출된 작업 정보
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage1-api" class="tab-content">
+                <div class="section">
+                    <h3>API 엔드포인트</h3>
+                    <div class="api-endpoint">
+                        <span class="api-method post">POST</span>
+                        <strong>/api/extract</strong>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">Request Body</div>
+                        <pre><code class="language-json">{
+    "text": "내일 오전 10시 팀 회의 준비하고, 보고서 작성 필요. 
+             코드 리뷰도 진행해야 함",
+    "workflow_type": "full"  // full, extract_only, analyze_only
+}</code></pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">Response</div>
+                        <pre><code class="language-json">{
+    "success": true,
+    "workflow_type": "full",
+    "extracted_count": 3,
+    "tasks": [
+        {
+            "id": 1,
+            "title": "팀 회의 준비",
+            "description": "내일 오전 10시 회의 준비",
+            "priority": "HIGH",
+            "category": "회의",
+            "estimated_time": 60,
+            "subtasks": [
+                "회의 자료 준비",
+                "참석자 확인",
+                "회의실 예약"
+            ]
+        }
+    ],
+    "analysis": {
+        "팀 회의 준비": {
+            "complexity": "MEDIUM",
+            "dependencies": ["회의 자료"],
+            "risks": ["시간 부족"],
+            "required_skills": ["커뮤니케이션", "프레젠테이션"]
+        }
+    },
+    "prioritization": [...]
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage1-backend" class="tab-content">
+                <div class="section">
+                    <h3>백엔드 처리 코드</h3>
+                    <div class="code-block">
+                        <div class="code-header">main.py - /api/extract 엔드포인트</div>
+                        <pre><code class="language-python">@app.post("/api/extract")
+async def extract_tasks(request: ExtractRequest, db: Session = Depends(get_db)):
+    """
+    텍스트에서 작업 추출 (멀티에이전트 워크플로우)
+    
+    워크플로우 타입:
+    - full: 전체 워크플로우 (추출 → 분석 → 우선순위 → 분해)
+    - extract_only: 추출만
+    - analyze_only: 추출 + 분석
+    """
+    # 멀티에이전트 워크플로우 실행
+    results = app.state.agent_processor.process_workflow(
+        request.text, 
+        request.workflow_type
+    )
+    
+    # DB에 저장
+    saved_tasks = []
+    for task_data in results["extracted_tasks"]:
+        task = TaskModel(
+            title=task_data.get("title"),
+            description=task_data.get("description"),
+            priority=task_data.get("priority", "MEDIUM"),
+            category=task_data.get("category"),
+            estimated_time=task_data.get("estimated_time"),
+            confidence_score=0.85 if app.state.agent_processor.llm else 0.5,
+            ai_extracted=bool(app.state.agent_processor.llm),
+            source_text=request.text[:500]
+        )
+        
+        # 분석 결과 저장
+        if task_data.get("title") in results.get("analysis", {}):
+            task.analysis = json.dumps(
+                results["analysis"][task_data["title"]], 
+                ensure_ascii=False
+            )
+        
+        # 서브태스크 저장
+        if results.get("decomposition"):
+            if task_data.get("title") == results["decomposition"].get("task"):
+                task.subtasks = json.dumps(
+                    results["decomposition"]["subtasks"], 
+                    ensure_ascii=False
+                )
+        
+        db.add(task)
+        saved_tasks.append(task)
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "workflow_type": request.workflow_type,
+        "extracted_count": len(saved_tasks),
+        "tasks": [format_task(t) for t in saved_tasks],
+        "analysis": results.get("analysis"),
+        "prioritization": results.get("prioritization")
+    }</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage1-ai" class="tab-content">
+                <div class="section">
+                    <h3>멀티에이전트 시스템</h3>
+                    <div class="mermaid">
+                        flowchart LR
+                            Input[입력 텍스트] --> Agent1[추출 에이전트]
+                            Agent1 --> Tasks[작업 목록]
+                            Tasks --> Agent2[분석 에이전트]
+                            Agent2 --> Analysis[복잡도/의존성]
+                            Tasks --> Agent3[우선순위 에이전트]
+                            Agent3 --> Priority[우선순위 정렬]
+                            Tasks --> Agent4[분해 에이전트]
+                            Agent4 --> Subtasks[서브태스크]
+                            
+                            Analysis --> Result[최종 결과]
+                            Priority --> Result
+                            Subtasks --> Result
+                    </div>
+                    
+                    <div class="code-block">
+                        <div class="code-header">MultiAgentProcessor - process_workflow</div>
+                        <pre><code class="language-python">def process_workflow(self, text: str, workflow_type: str = "full") -> Dict:
+    """전체 멀티에이전트 워크플로우 실행"""
+    results = {
+        "extracted_tasks": [],
+        "analysis": {},
+        "prioritization": [],
+        "decomposition": {}
+    }
+    
+    # 1. 추출 에이전트
+    extracted = self.extract_agent(text)
+    results["extracted_tasks"] = extracted
+    
+    if workflow_type == "extract_only":
+        return results
+    
+    # 2. 분석 에이전트 (상위 3개)
+    for task in extracted[:3]:
+        analysis = self.analyze_agent(task)
+        results["analysis"][task["title"]] = analysis
+    
+    if workflow_type == "analyze_only":
+        return results
+    
+    # 3. 우선순위 에이전트
+    prioritized = self.prioritize_agent(extracted)
+    results["prioritization"] = prioritized
+    
+    # 4. 분해 에이전트 (최우선 작업)
+    if prioritized:
+        top_task = prioritized[0]
+        subtasks = self.decompose_agent(top_task)
+        results["decomposition"] = {
+            "task": top_task["title"],
+            "subtasks": subtasks
+        }
+    
+    return results</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage1-db" class="tab-content">
+                <div class="section">
+                    <h3>데이터베이스 스키마</h3>
+                    <div class="code-block">
+                        <div class="code-header">TaskModel - SQLAlchemy 모델</div>
+                        <pre><code class="language-python">class TaskModel(Base):
+    """작업 데이터베이스 모델"""
+    __tablename__ = "tasks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    status = Column(String(50), default="TODO")
+    priority = Column(String(20), default="MEDIUM")
+    category = Column(String(50))
+    estimated_time = Column(Integer)  # 분 단위
+    confidence_score = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime)
+    ai_extracted = Column(Boolean, default=False)
+    source_text = Column(Text)
+    subtasks = Column(Text)  # JSON string
+    analysis = Column(Text)  # JSON string</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 2: 작업 관리 -->
+        <div class="stage-container">
+            <div class="stage-header">
+                <div class="stage-number">2</div>
+                <div class="stage-title">
+                    <h2>작업 조회 및 관리</h2>
+                    <p class="stage-description">생성된 작업 조회, 상태 업데이트, 추가 분석</p>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab(event, 'stage2-flow')">전체 플로우</button>
+                <button class="tab-button" onclick="showTab(event, 'stage2-api')">API 목록</button>
+                <button class="tab-button" onclick="showTab(event, 'stage2-process')">추가 처리</button>
+                <button class="tab-button" onclick="showTab(event, 'stage2-manual')">수동 생성</button>
+            </div>
+
+            <div id="stage2-flow" class="tab-content active">
+                <div class="section">
+                    <h3>작업 관리 플로우</h3>
+                    <div class="mermaid">
+                        sequenceDiagram
+                        participant Client as API Client
+                        participant API as FastAPI
+                        participant DB as PostgreSQL
+                        participant Agent as AI Agent
+                        
+                        Note over Client, DB: 작업 조회
+                        Client->>API: GET /api/tasks?status=TODO
+                        API->>DB: SELECT * FROM tasks
+                        DB-->>API: 작업 목록
+                        API-->>Client: 작업 목록 반환
+                        
+                        Note over Client, DB: 작업 완료 처리
+                        Client->>API: PUT /api/task/{id}/complete
+                        API->>DB: UPDATE status='COMPLETED'
+                        DB-->>API: 업데이트 완료
+                        API-->>Client: 성공 응답
+                        
+                        Note over Client, Agent: 추가 분석 요청
+                        Client->>API: POST /api/process<br/>{task_id, action: "analyze"}
+                        API->>Agent: analyze_agent(task)
+                        Agent-->>API: 분석 결과
+                        API->>DB: UPDATE analysis
+                        API-->>Client: 분석 결과 반환
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage2-api" class="tab-content">
+                <div class="section">
+                    <h3>구현된 API 엔드포인트</h3>
+                    <table class="status-table">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>설명</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="api-method get">GET</span></td>
+                                <td>/api/tasks</td>
+                                <td>작업 목록 조회 (필터링 지원)</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="api-method get">GET</span></td>
+                                <td>/api/task/{id}</td>
+                                <td>특정 작업 상세 조회</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="api-method post">POST</span></td>
+                                <td>/api/task</td>
+                                <td>수동 작업 생성</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="api-method put">PUT</span></td>
+                                <td>/api/task/{id}/complete</td>
+                                <td>작업 완료 처리</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="api-method delete">DELETE</span></td>
+                                <td>/api/task/{id}</td>
+                                <td>작업 삭제</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="api-method post">POST</span></td>
+                                <td>/api/process</td>
+                                <td>작업 추가 처리 (분석/우선순위/분해)</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="stage2-process" class="tab-content">
+                <div class="section">
+                    <h3>작업 추가 처리</h3>
+                    <div class="code-block">
+                        <div class="code-header">POST /api/process - Request</div>
+                        <pre><code class="language-json">{
+    "task_id": 1,
+    "action": "analyze"  // analyze, prioritize, decompose
+}</code></pre>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">처리 가능한 액션</div>
+                        <pre><code class="language-python">@app.post("/api/process")
+async def process_task(request: ProcessRequest, db: Session = Depends(get_db)):
+    """
+    기존 작업에 대한 추가 처리
+    
+    Actions:
+    - analyze: 작업 분석 (복잡도, 의존성, 위험요소)
+    - prioritize: 우선순위 재조정 (다른 작업들과 비교)
+    - decompose: 서브태스크 생성 (작업 분해)
+    """
+    task = db.query(TaskModel).filter(TaskModel.id == request.task_id).first()
+    
+    if request.action == "analyze":
+        result = app.state.agent_processor.analyze_agent(task_dict)
+        task.analysis = json.dumps(result, ensure_ascii=False)
+        
+    elif request.action == "prioritize":
+        # 다른 작업들과 함께 우선순위 재조정
+        all_tasks = db.query(TaskModel).filter(TaskModel.status == "TODO").limit(10).all()
+        prioritized = app.state.agent_processor.prioritize_agent(tasks_list)
+        result = {"new_priorities": prioritized}
+        
+    elif request.action == "decompose":
+        subtasks = app.state.agent_processor.decompose_agent(task_dict)
+        task.subtasks = json.dumps(subtasks, ensure_ascii=False)
+        result = {"subtasks": subtasks}
+    
+    db.commit()
+    return {"task_id": request.task_id, "action": request.action, "result": result}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage2-manual" class="tab-content">
+                <div class="section">
+                    <h3>수동 작업 생성</h3>
+                    <div class="code-block">
+                        <div class="code-header">POST /api/task - Request</div>
+                        <pre><code class="language-json">{
+    "title": "주간 보고서 작성",
+    "description": "이번 주 진행 사항 정리 및 다음 주 계획 수립",
+    "priority": "HIGH",
+    "category": "문서"
+}</code></pre>
+                    </div>
+                    <p style="margin: 1rem 0;">
+                        💡 <strong>참고:</strong> 수동으로 생성된 작업은 ai_extracted=false로 표시되며, 
+                        추후 /api/process를 통해 AI 분석을 추가할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stage 3: 시스템 상태 확인 -->
+        <div class="stage-container">
+            <div class="stage-header">
+                <div class="stage-number">3</div>
+                <div class="stage-title">
+                    <h2>시스템 상태 모니터링</h2>
+                    <p class="stage-description">헬스체크 및 시스템 정보 확인</p>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab(event, 'stage3-health')">헬스체크</button>
+                <button class="tab-button" onclick="showTab(event, 'stage3-info')">시스템 정보</button>
+            </div>
+
+            <div id="stage3-health" class="tab-content active">
+                <div class="section">
+                    <h3>Health Check Endpoints</h3>
+                    <div class="api-endpoint">
+                        <span class="api-method get">GET</span>
+                        <strong>/health</strong>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">Response</div>
+                        <pre><code class="language-json">{
+    "status": "healthy",
+    "database": "connected",
+    "ai_enabled": true,
+    "timestamp": "2024-01-10T15:30:00"
+}</code></pre>
+                    </div>
+                    
+                    <div class="api-endpoint">
+                        <span class="api-method get">GET</span>
+                        <strong>/</strong>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">Response</div>
+                        <pre><code class="language-json">{
+    "service": "AI Task Manager",
+    "version": "2.0",
+    "ai_enabled": true,
+    "database": "PostgreSQL",
+    "timestamp": "2024-01-10T15:30:00",
+    "endpoints": {
+        "docs": "/docs",
+        "extract": "POST /api/extract",
+        "process": "POST /api/process",
+        "tasks": "GET /api/tasks",
+        "task": "POST /api/task"
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage3-info" class="tab-content">
+                <div class="section">
+                    <h3>시스템 구성 요소</h3>
+                    <table class="status-table">
+                        <thead>
+                            <tr>
+                                <th>컴포넌트</th>
+                                <th>기술 스택</th>
+                                <th>상태</th>
+                                <th>비고</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Backend API</strong></td>
+                                <td>FastAPI + Uvicorn</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                                <td>포트 8090</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Database</strong></td>
+                                <td>PostgreSQL + SQLAlchemy</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                                <td>포트 5432</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AI Engine</strong></td>
+                                <td>LangChain + OpenRouter</td>
+                                <td><span class="status-badge implemented">구현됨</span></td>
+                                <td>멀티에이전트 시스템</td>
+                            </tr>
+                            <tr>
+                                <td><strong>인증 시스템</strong></td>
+                                <td>OAuth 2.0 (Naver)</td>
+                                <td><span class="status-badge not-implemented">미구현</span></td>
+                                <td>계획됨</td>
+                            </tr>
+                            <tr>
+                                <td><strong>캐싱</strong></td>
+                                <td>Redis</td>
+                                <td><span class="status-badge not-implemented">미구현</span></td>
+                                <td>config.py에서 제거됨</td>
+                            </tr>
+                            <tr>
+                                <td><strong>실시간 통신</strong></td>
+                                <td>WebSocket</td>
+                                <td><span class="status-badge not-implemented">미구현</span></td>
+                                <td>계획됨</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Frontend</strong></td>
+                                <td>React/Vue</td>
+                                <td><span class="status-badge not-implemented">미구현</span></td>
+                                <td>API만 제공</td>
+                            </tr>
+                            <tr>
+                                <td><strong>사용자 관리</strong></td>
+                                <td>User Profile Service</td>
+                                <td><span class="status-badge partial">부분 구현</span></td>
+                                <td>모델/서비스만 존재</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 미구현 기능 요약 -->
+        <div class="stage-container">
+            <div class="stage-header">
+                <div class="stage-number">📋</div>
+                <div class="stage-title">
+                    <h2>구현 로드맵</h2>
+                    <p class="stage-description">향후 구현 예정 기능</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Phase 1: 인증 및 사용자 관리</h3>
+                <ul style="margin-left: 2rem; line-height: 1.8;">
+                    <li>✅ User 모델 (models/user.py) - <strong>완료</strong></li>
+                    <li>✅ UserProfileService (services/user_profile_service.py) - <strong>완료</strong></li>
+                    <li>⏳ OAuth 2.0 인증 (Naver) - <strong>미구현</strong></li>
+                    <li>⏳ JWT 토큰 관리 - <strong>미구현</strong></li>
+                    <li>⏳ 사용자 API 엔드포인트 - <strong>미구현</strong></li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h3>Phase 2: 실시간 통신 및 캐싱</h3>
+                <ul style="margin-left: 2rem; line-height: 1.8;">
+                    <li>⏳ Redis 캐싱 레이어 - <strong>미구현</strong></li>
+                    <li>⏳ WebSocket 실시간 업데이트 - <strong>미구현</strong></li>
+                    <li>⏳ 작업 큐 (Celery) - <strong>미구현</strong></li>
+                    <li>⏳ 비동기 작업 처리 - <strong>미구현</strong></li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h3>Phase 3: Frontend 개발</h3>
+                <ul style="margin-left: 2rem; line-height: 1.8;">
+                    <li>⏳ React/Vue 프론트엔드 - <strong>미구현</strong></li>
+                    <li>⏳ 대시보드 UI - <strong>미구현</strong></li>
+                    <li>⏳ 작업 관리 인터페이스 - <strong>미구현</strong></li>
+                    <li>⏳ 실시간 알림 시스템 - <strong>미구현</strong></li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h3>Phase 4: 통합 및 최적화</h3>
+                <ul style="margin-left: 2rem; line-height: 1.8;">
+                    <li>⏳ 외부 서비스 통합 (Email, Slack, Notion) - <strong>미구현</strong></li>
+                    <li>⏳ 행동 학습 서비스 활성화 - <strong>미구현</strong></li>
+                    <li>⏳ 성능 최적화 - <strong>미구현</strong></li>
+                    <li>⏳ 모니터링 및 로깅 강화 - <strong>미구현</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 테스트 가이드 -->
+        <div class="stage-container">
+            <div class="stage-header">
+                <div class="stage-number">🧪</div>
+                <div class="stage-title">
+                    <h2>현재 시스템 테스트 방법</h2>
+                    <p class="stage-description">API 직접 호출을 통한 테스트</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>1. 서버 시작</h3>
+                <div class="code-block">
+                    <div class="code-header">Terminal</div>
+                    <pre><code class="language-bash"># PostgreSQL 시작 (macOS)
+brew services start postgresql@15
+
+# 가상환경 활성화
+source venv/bin/activate
+
+# 환경변수 설정 (.env 파일)
+export OPENROUTER_API_KEY="your-api-key"
+export DATABASE_URL="postgresql://postgres:password@localhost:5432/ai_task_manager"
+
+# 서버 실행
+python main.py</code></pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>2. API 테스트 (curl)</h3>
+                <div class="code-block">
+                    <div class="code-header">작업 추출</div>
+                    <pre><code class="language-bash">curl -X POST http://localhost:8090/api/extract \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "내일 오전 10시 팀 회의 준비하고, 보고서 작성 필요",
+    "workflow_type": "full"
+  }'</code></pre>
+                </div>
+                
+                <div class="code-block">
+                    <div class="code-header">작업 목록 조회</div>
+                    <pre><code class="language-bash">curl http://localhost:8090/api/tasks?status=TODO</code></pre>
+                </div>
+                
+                <div class="code-block">
+                    <div class="code-header">작업 완료 처리</div>
+                    <pre><code class="language-bash">curl -X PUT http://localhost:8090/api/task/1/complete</code></pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>3. Swagger UI 사용</h3>
+                <p style="margin: 1rem 0;">
+                    브라우저에서 <strong>http://localhost:8090/docs</strong> 접속하여 
+                    대화형 API 문서를 통해 테스트 가능
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 30
+            }
+        });
+
+        // 탭 전환 함수
+        function showTab(event, tabId) {
+            // 현재 stage 컨테이너 찾기
+            const container = event.target.closest('.stage-container');
+            
+            // 모든 탭 버튼 비활성화
+            container.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 모든 탭 컨텐츠 숨기기
+            container.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 선택한 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('현재 구현 상태 문서 로드 완료');
+        });
+    </script>
+</body>
+</html>
