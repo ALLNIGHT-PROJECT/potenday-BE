@@ -81,5 +81,10 @@ public class TodoController {
         return ResponseEntity.ok(ApiResponse.success(todo));
     }
 
+    public ResponseEntity<ApiResponse<?>> checkSubTask( HttpServletRequest request, @RequestBody DailyTodoDetail dailyTodoDetail ){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+    }
+
 
 }
