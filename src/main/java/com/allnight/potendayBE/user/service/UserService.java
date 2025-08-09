@@ -32,6 +32,7 @@ public class UserService {
         redisTemplate.delete("RT:" + userId);
     }
 
+    @Transactional
     public void createOrUpdateUserProfile(Long userId, UserProfileDto userProfileDto) {
         User user = findByUserId(userId);
         UserProfile userProfile = userProfileRepository.findByUserId(userId)
