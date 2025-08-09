@@ -22,7 +22,7 @@ public class DailyTodo {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id")
+    @JoinColumn(name = "task_id", unique = true, nullable = false)
     private Task task;
 
     private LocalDate targetDate;

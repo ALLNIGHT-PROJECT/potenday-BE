@@ -2,15 +2,14 @@ package com.allnight.potendayBE.task.controller;
 
 import com.allnight.potendayBE.common.ApiResponse;
 import com.allnight.potendayBE.security.jwt.JwtUtil;
+import com.allnight.potendayBE.task.dto.TaskCreateRequest;
 import com.allnight.potendayBE.task.dto.TaskDetail;
 import com.allnight.potendayBE.task.service.TaskService;
 import com.allnight.potendayBE.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,7 +20,6 @@ public class TaskController {
 
     private final JwtUtil jwtUtil;
     private final TaskService taskService;
-    private final UserService userService;
 
     @GetMapping
     ResponseEntity<ApiResponse<?>> getUsersTask(HttpServletRequest request){
@@ -30,5 +28,14 @@ public class TaskController {
 
         List<TaskDetail> userTaskList = taskService.getUsersTask(userId);
         return ResponseEntity.ok(ApiResponse.success(userTaskList));
+    }
+
+    @PostMapping("/manual")
+    ResponseEntity<ApiResponse<?>> registerTask(HttpServletRequest request, @RequestBody TaskCreateRequest taskCreateRequest){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+
+        taskService.createManualTask(userId, taskCreateRequest);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
