@@ -31,9 +31,22 @@ app = FastAPI(
 )
 
 # CORS 설정
+# 개발 환경에서는 모든 origin 허용
+origins = [
+    "http://localhost:3000",
+    "https://localhost:3000",
+    "http://localhost:8000",
+    "https://localhost:8000",
+    "http://localhost:8443",
+    "https://localhost:8443",
+    "https://223-130-151-253.sslip.io:8443",
+    "https://api.potenday.com",
+    "*"  # 개발 환경에서 모든 origin 허용
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
