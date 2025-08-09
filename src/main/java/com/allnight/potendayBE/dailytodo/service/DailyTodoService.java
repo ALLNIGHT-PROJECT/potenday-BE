@@ -3,8 +3,9 @@ package com.allnight.potendayBE.dailytodo.service;
 import com.allnight.potendayBE.dailytodo.domain.DailySubTask;
 import com.allnight.potendayBE.dailytodo.domain.DailyTodo;
 import com.allnight.potendayBE.dailytodo.dto.DailyTodoDetail;
+import com.allnight.potendayBE.dailytodo.dto.DailyTodoDto;
 import com.allnight.potendayBE.dailytodo.dto.DailyTodoReorderRequest;
-import com.allnight.potendayBE.dailytodo.dto.SubTaskDetail;
+import com.allnight.potendayBE.dailytodo.dto.DailySubTaskDetail;
 import com.allnight.potendayBE.dailytodo.repository.DailyTodoRepository;
 import com.allnight.potendayBE.exception.CustomException;
 import com.allnight.potendayBE.exception.ErrorCode;
@@ -31,19 +32,20 @@ public class DailyTodoService {
                 .orElseThrow(() -> new CustomException(ErrorCode.TODO_NOT_FOUND));
     }
 
-    public List<DailyTodoDetail> getUsersTodo(Long userId, LocalDate targetDate){
+    // 요청 유저의 투두조회
+    public List<DailyTodoDto> getUserTodoList(Long userId, LocalDate targetDate){
         User user = userService.findByUserId(userId);
         List<DailyTodo> userTodoList = dailyTodoRepository.findByUserTodoWithSubTasks(user, targetDate);
         return userTodoList.stream()
                 .map(this::toDetail)
                 .toList();
     }
-
-    private DailyTodoDetail toDetail(DailyTodo d) {
-        // 서브태스크 DTO 변환
-        List<SubTaskDetail> subs = (d.getSubTasks() == null ? List.<SubTaskDetail>of() :
+    // 서브테스크 조회 & 관련집계
+    private DailyTodoDto toDetail(DailyTodo d) {
+        // 서브테스크 DTO 변환
+        List<DailySubTaskDetail> subs = (d.getSubTasks() == null ? List.<DailySubTaskDetail>of() :
                 d.getSubTasks().stream().map(st -> {
-                    SubTaskDetail s = new SubTaskDetail();
+                    DailySubTaskDetail s = new DailySubTaskDetail();
                     s.setSubTaskId(st.getId());
                     s.setTitle(st.getTitle());
                     s.setEstimatedMin(st.getEstimatedTime());   // 필드명 맞춤
@@ -52,13 +54,13 @@ public class DailyTodoService {
                 }).toList()
         );
 
-        // 합계/완료/진척 계산
-        int totalMin = subs.stream().mapToInt(SubTaskDetail::getEstimatedMin).sum();
-        boolean allChecked = !subs.isEmpty() && subs.stream().allMatch(SubTaskDetail::isChecked);
+        // 합계,완료,진척 계산
+        int totalMin = subs.stream().mapToInt(DailySubTaskDetail::getEstimatedMin).sum();
+        boolean allChecked = !subs.isEmpty() && subs.stream().allMatch(DailySubTaskDetail::isChecked);
         double progress = subs.isEmpty() ? 0.0 :
-                (subs.stream().filter(SubTaskDetail::isChecked).count() * 100.0) / subs.size();
+                (subs.stream().filter(DailySubTaskDetail::isChecked).count() * 100.0) / subs.size();
 
-        DailyTodoDetail out = new DailyTodoDetail();
+        DailyTodoDto out = new DailyTodoDto();
         out.setTodoId(d.getId());
         out.setTitle(d.getTitle());
         out.setPriority(d.getPriority().name());
@@ -71,6 +73,7 @@ public class DailyTodoService {
         return out;
     }
 
+    // task를 투두로 등록
     @Transactional
     public DailyTodo registerDailyTodo(Task task, LocalDate targetDate, User user) {
         DailyTodo dailyTodo = new DailyTodo();
@@ -89,7 +92,7 @@ public class DailyTodoService {
         int nextOrder = dailyTodoRepository.findMaxOrderIdxByPriority(user, task.getPriority(), targetDate) + 1;
         dailyTodo.setOrderIdx(nextOrder);
 
-        // SubTask 매핑
+        // SubTask -> DailySubTask로 매핑
         if (task.getSubTasks() != null) {
             List<DailySubTask> clones = task.getSubTasks().stream()
                     .map(sub -> DailySubTask.builder()
@@ -115,6 +118,7 @@ public class DailyTodoService {
 //                .toList();
 //    }
 
+    // 우선순위 변경
     @Transactional
     public void reorderTodoList(DailyTodoReorderRequest request, LocalDate targetDate, User user) {
         DailyTodo targetTodo = findById(request.getTodoId());
@@ -160,5 +164,33 @@ public class DailyTodoService {
             samePriorityTodos.add(targetTodo);
         }
         dailyTodoRepository.saveAll(samePriorityTodos);
+    }
+
+    public DailyTodoDetail getUserTodo(Long userId, Long todoId, LocalDate targetDate){
+        User user = userService.findByUserId(userId);
+        DailyTodo dailyTodo = dailyTodoRepository.findByIdWithSubTasks(user, targetDate, todoId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TODO_NOT_FOUND));
+
+        // 서브태스크 DTO 변환
+        List<DailySubTaskDetail> subs = (dailyTodo.getSubTasks() == null ? List.<DailySubTaskDetail>of() :
+                dailyTodo.getSubTasks().stream().map(st -> {
+                    DailySubTaskDetail s = new DailySubTaskDetail();
+                    s.setSubTaskId(st.getId());
+                    s.setTitle(st.getTitle());
+                    s.setEstimatedMin(st.getEstimatedTime());
+                    s.setChecked(st.isCompleted());
+                    return s;
+                }).toList()
+        );
+
+        return DailyTodoDetail.builder()
+                .todoId(dailyTodo.getId())
+                .title(dailyTodo.getTitle())
+                .priority(dailyTodo.getPriority().name())
+                .description(dailyTodo.getDescription())
+                .dueDate(dailyTodo.getDueDate())
+                .reference(dailyTodo.getReference())
+                .subTasks(subs)
+                .build();
     }
 }

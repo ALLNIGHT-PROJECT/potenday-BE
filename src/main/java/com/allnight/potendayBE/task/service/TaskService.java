@@ -39,7 +39,6 @@ public class TaskService {
                     detail.setDueDate(task.getDueDate());
                     detail.setPriority(task.getPriority().name());
                     detail.setReference(task.getReference());
-                    detail.setTotalEstimatedTime(task.getTotalEstimatedTime());
                     return detail;
                 }).toList();
     }

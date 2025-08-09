@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class SubTaskDetail {
+public class DailySubTaskDetail {
     private Long subTaskId;
     private String title;
     private int estimatedMin;

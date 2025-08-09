@@ -3,6 +3,7 @@ package com.allnight.potendayBE.dailytodo.controller;
 import com.allnight.potendayBE.common.ApiResponse;
 import com.allnight.potendayBE.dailytodo.domain.DailyTodo;
 import com.allnight.potendayBE.dailytodo.dto.DailyTodoDetail;
+import com.allnight.potendayBE.dailytodo.dto.DailyTodoDto;
 import com.allnight.potendayBE.dailytodo.dto.DailyTodoReorderRequest;
 import com.allnight.potendayBE.dailytodo.service.DailyTodoService;
 import com.allnight.potendayBE.security.jwt.JwtUtil;
@@ -35,7 +36,7 @@ public class TodoController {
         String token = jwtUtil.resolveToken(request);
         Long userId = jwtUtil.extractUserId(token, false);
 
-        List<DailyTodoDetail> userTodoLists = dailyTodoService.getUsersTodo(userId, LocalDate.now());
+        List<DailyTodoDto> userTodoLists = dailyTodoService.getUserTodoList(userId, LocalDate.now());
         return ResponseEntity.ok(ApiResponse.success(userTodoLists));
     }
 
@@ -60,4 +61,15 @@ public class TodoController {
         dailyTodoService.reorderTodoList(reorderRequest, LocalDate.now(), user);
         return ResponseEntity.ok(ApiResponse.success("순서변경완료"));
     }
+
+    @GetMapping("/detail/{todoId}")
+    public ResponseEntity<ApiResponse<?>> getTodoDetail( HttpServletRequest request, @PathVariable("todoId") Long todoId ){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+
+        DailyTodoDetail dailyTodoDetail = dailyTodoService.getUserTodo(userId, todoId, LocalDate.now());
+        return ResponseEntity.ok(ApiResponse.success(dailyTodoDetail));
+    }
+
+
 }

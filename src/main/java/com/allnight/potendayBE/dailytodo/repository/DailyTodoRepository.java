@@ -95,4 +95,19 @@ public class DailyTodoRepository {
                 .setParameter("targetDate", targetDate)
                 .getResultList();
     }
+
+    public Optional<DailyTodo> findByIdWithSubTasks(User user, LocalDate targetDate, Long todoId) {
+        return em.createQuery("""
+            SELECT d
+            FROM DailyTodo d
+            LEFT JOIN FETCH d.subTasks s
+            WHERE d.user = :user
+              AND d.targetDate = :date
+              AND d.id = :todoId
+            """, DailyTodo.class)
+                .setParameter("user", user)
+                .setParameter("date", targetDate)
+                .setParameter("todoId", todoId)
+                .getResultList().stream().findFirst();
+    }
 }
