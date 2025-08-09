@@ -1,6 +1,7 @@
 package com.allnight.potendayBE.task.repository;
 
 import com.allnight.potendayBE.task.domain.Task;
+import com.allnight.potendayBE.user.domain.User;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -42,5 +43,15 @@ public class TaskRepository {
 
     public Optional<Task> findOne(Long id){
         return Optional.ofNullable(em.find(Task.class, id));
+    }
+
+    public List<Task> findUnregisteredTasksByUser(User user) {
+        return em.createQuery(""" 
+                SELECT t FROM Task t WHERE t.user = :user 
+                AND NOT EXISTS ( SELECT 1 FROM DailyTodo d WHERE d.task = t ) 
+                ORDER BY t.createdAt ASC
+            """, Task.class)
+                .setParameter("user", user)
+                .getResultList();
     }
 }

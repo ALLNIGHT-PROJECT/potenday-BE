@@ -27,7 +27,7 @@ public class TodoController {
     private final TaskService taskService;
     private final JwtUtil jwtUtil;
 
-    @GetMapping("/user")
+    @GetMapping
     public ResponseEntity<ApiResponse<?>> getTodoList( HttpServletRequest request ){
         String token = jwtUtil.resolveToken(request);
         Long userId = jwtUtil.extractUserId(token, false);
