@@ -1,10 +1,13 @@
 package com.allnight.potendayBE.dailytodo.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-@Getter @Setter
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DailySubTaskDetail {
     private Long subTaskId;
     private String title;

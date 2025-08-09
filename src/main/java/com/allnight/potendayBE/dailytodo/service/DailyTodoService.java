@@ -10,6 +10,7 @@ import com.allnight.potendayBE.dailytodo.repository.DailyTodoRepository;
 import com.allnight.potendayBE.exception.CustomException;
 import com.allnight.potendayBE.exception.ErrorCode;
 import com.allnight.potendayBE.task.domain.Task;
+import com.allnight.potendayBE.task.domain.TaskPriority;
 import com.allnight.potendayBE.user.domain.User;
 import com.allnight.potendayBE.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -192,5 +194,61 @@ public class DailyTodoService {
                 .reference(dailyTodo.getReference())
                 .subTasks(subs)
                 .build();
+    }
+
+    @Transactional
+    public Long updateUserTodo(Long userId, Long todoId, DailyTodoDetail dailyTodoDetail, LocalDate targetDate) {
+        User user = userService.findByUserId(userId);
+
+        DailyTodo dailyTodo = dailyTodoRepository.findByIdWithSubTasks(user, targetDate, todoId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TODO_NOT_FOUND));
+        // DailyTodo 기본 정보 수정
+        if (dailyTodoDetail.getTitle() != null)  dailyTodo.setTitle(dailyTodoDetail.getTitle());
+        if (dailyTodoDetail.getDescription() != null) dailyTodo.setDescription(dailyTodoDetail.getDescription());
+        if (dailyTodoDetail.getDueDate() != null) dailyTodo.setDueDate(dailyTodoDetail.getDueDate());
+        if (dailyTodoDetail.getPriority() != null) dailyTodo.setPriority(TaskPriority.valueOf(dailyTodoDetail.getPriority()));
+        if (dailyTodoDetail.getReference() != null) dailyTodo.setReference(dailyTodoDetail.getReference());
+
+        // 요청 subTasks null-safe 처리
+        List<DailySubTaskDetail> requestSubTasks = dailyTodoDetail.getSubTasks();
+        if (requestSubTasks == null) {
+            requestSubTasks = Collections.emptyList();
+        }
+
+        // 기존 SubTask Map
+        Map<Long, DailySubTask> existingSubs = dailyTodo.getSubTasks().stream()
+                .filter(st -> st.getId() != null)
+                .collect(Collectors.toMap(DailySubTask::getId, st -> st));
+
+        // 요청 ID 모음 (삭제 판단용)
+        Set<Long> requestIds = requestSubTasks.stream()
+                .map(DailySubTaskDetail::getSubTaskId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // 삭제 처리
+        dailyTodo.getSubTasks().removeIf(st -> st.getId() != null && !requestIds.contains(st.getId()));
+
+        // 수정·추가 처리
+        for (DailySubTaskDetail subReq : requestSubTasks) {
+            if (subReq.getSubTaskId() != null && existingSubs.containsKey(subReq.getSubTaskId())) {
+                // 수정
+                DailySubTask sub = existingSubs.get(subReq.getSubTaskId());
+                sub.setTitle(subReq.getTitle());
+                sub.setEstimatedTime(subReq.getEstimatedMin());
+                sub.setCompleted(subReq.isChecked());
+            } else {
+                // 추가
+                DailySubTask newSub = DailySubTask.builder()
+                        .dailyTodo(dailyTodo)
+                        .title(subReq.getTitle())
+                        .estimatedTime(subReq.getEstimatedMin())
+                        .isCompleted(subReq.isChecked())
+                        .build();
+                dailyTodo.getSubTasks().add(newSub);
+            }
+        }
+
+        return dailyTodo.getId();
     }
 }

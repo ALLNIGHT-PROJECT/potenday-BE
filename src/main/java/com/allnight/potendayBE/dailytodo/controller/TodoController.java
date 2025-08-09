@@ -62,13 +62,23 @@ public class TodoController {
         return ResponseEntity.ok(ApiResponse.success("순서변경완료"));
     }
 
-    @GetMapping("/detail/{todoId}")
+    @GetMapping("/{todoId}")
     public ResponseEntity<ApiResponse<?>> getTodoDetail( HttpServletRequest request, @PathVariable("todoId") Long todoId ){
         String token = jwtUtil.resolveToken(request);
         Long userId = jwtUtil.extractUserId(token, false);
 
         DailyTodoDetail dailyTodoDetail = dailyTodoService.getUserTodo(userId, todoId, LocalDate.now());
         return ResponseEntity.ok(ApiResponse.success(dailyTodoDetail));
+    }
+
+    @PatchMapping("/{todoId}")
+    public ResponseEntity<ApiResponse<?>> patchTodo( HttpServletRequest request,
+                                                     @PathVariable("todoId") Long todoId, @RequestBody DailyTodoDetail dailyTodoDetail ){
+        String token = jwtUtil.resolveToken(request);
+        Long userId = jwtUtil.extractUserId(token, false);
+
+        Long todo = dailyTodoService.updateUserTodo(userId, todoId, dailyTodoDetail, LocalDate.now());
+        return ResponseEntity.ok(ApiResponse.success(todo));
     }
 
 
